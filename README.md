@@ -1,1 +1,3 @@
-# LibraVersor
+## LibraVersor
+
+**Python**: `3.11.0`
