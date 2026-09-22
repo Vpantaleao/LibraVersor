@@ -8,6 +8,7 @@ import pickle
 
 MODEL_PATH = "modelo_gestos.p"
 SEQUENCE_LENGTH = 30
+DISPLAY_HOLD_SECONDS = 2.5
 
 with open(MODEL_PATH, "rb") as f:
     model_data = pickle.load(f)
@@ -44,15 +45,22 @@ def extract_landmarks(landmarks):
 
 def main():
     sequence_buffer = collections.deque(maxlen=SEQUENCE_LENGTH)
+    recent_predictions = collections.deque(maxlen=5)
 
     current_gesture = "Aguardando..."
     confidence = 0.0
+
+    last_detected_gesture = "Aguardando..."
+    last_detection_time = 0.0
     
     with mp_hands.Hands(
         max_num_hands = 2,
         min_detection_confidence = 0.7,
         min_tracking_confidence = 0.7,
     ) as hands:
+
+        recent_predictions = collections.deque(maxlen=5)
+        
         while True:
             sucess, img = cap.read()
             if not sucess:
@@ -81,18 +89,29 @@ def main():
             sequence_buffer.append(features)
 
             if len(sequence_buffer) == SEQUENCE_LENGTH:
-                # Transforma a janela (30, 63) no vetor de entrada (1, 1890)
                 input_data = np.array(sequence_buffer).flatten().reshape(1, -1)
 
                 probabilities = clf.predict_proba(input_data)[0]
                 best_class_idx = np.argmax(probabilities)
                 confidence = probabilities[best_class_idx]
 
-                # Só atualiza a tela se o modelo tiver certeza razoável (> 70%)
-                if confidence > 0.70:
-                    current_gesture = labels_dict[best_class_idx]
+                if confidence > 0.6:
+                    recent_predictions.append(labels_dict[best_class_idx])
                 else:
-                    current_gesture = "Indefinido"
+                    recent_predictions.append("Indefinido")
+
+                if len(recent_predictions) == 5:
+                    most_common = max(set(recent_predictions), key=recent_predictions.count)
+                    if recent_predictions.count(most_common) >= 3 and most_common.lower() != "neutro": 
+                        last_detected_gesture = most_common
+                        last_detection_time = time.time()
+
+            elapsed_time = time.time() - last_detection_time
+            if elapsed_time < DISPLAY_HOLD_SECONDS and last_detected_gesture != "Aguardando...":
+                current_gesture = last_detected_gesture
+            else:
+                current_gesture = "Indefinido / Repouso"
+
 
             # Interface Visual (HUD)
             cv2.rectangle(img, (0, 0), (450, 90), (30, 30, 30), -1)
@@ -106,12 +125,19 @@ def main():
                 2,
                 cv2.LINE_AA,
             )
+
+            if elapsed_time < DISPLAY_HOLD_SECONDS and current_gesture != "Indefinido / Repouso":
+                tempo_restante = DISPLAY_HOLD_SECONDS - elapsed_time
+                status_sub = f"Confianca: {confidence * 100:.1f}% | Exibindo ({tempo_restante:.1f}s)"
+            else:
+                status_sub = "Aguardando sinal..."
+
             cv2.putText(
                 img,
-                f"Confiança: {confidence * 100:.1f}%",
+                status_sub,
                 (20, 75),
                 cv2.FONT_HERSHEY_SIMPLEX,
-                0.6,
+                0.5,
                 (200, 200, 200),
                 1,
                 cv2.LINE_AA,
