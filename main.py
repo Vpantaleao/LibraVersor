@@ -54,7 +54,7 @@ def main():
     last_detection_time = 0.0
     
     with mp_hands.Hands(
-        max_num_hands = 2,
+        max_num_hands = 1,
         min_detection_confidence = 0.7,
         min_tracking_confidence = 0.7,
     ) as hands:
