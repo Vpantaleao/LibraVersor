@@ -36,3 +36,7 @@ python main.py   # TODO: confirmar o arquivo principal
 6. Muito
 7. Pouco
 8. Remédio
+9. Gripe
+10. Vômito
+11. (dor) de Cabeça
+12. Sentindo
