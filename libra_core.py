@@ -22,8 +22,8 @@ REST_LABELS = {"repouso", "neutro"}   # classes de "mão parada": nunca viram pa
 DISPLAY_NAMES = {
     "bom dia": "bom dia", "de cabeça": "de cabeça", "dor": "dor",
     "emergencia": "emergência", "febre": "febre", "gripe": "gripe",
-    "muito": "muito", "não": "não", "obrigado": "obrigado", "oi": "oi",
-    "pouco": "pouco", "remédio": "remédio", "sentindo": "sentindo",
+    "muito": "muita", "não": "não", "obrigado": "obrigado", "oi": "oi",
+    "pouco": "pouca", "remédio": "remédio", "sentindo": "sentindo",
     "sim": "sim", "vômito": "vômito",
 }
 
